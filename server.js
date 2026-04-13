@@ -5,8 +5,8 @@ const app = express();
 
 app.use(cors());
 
-// --- SUAS CREDENCIAIS ADZUNA ---
-const ADZUNA_ID ="45a5b9b"; 
+// --- SUAS CREDENCIAIS REAIS ADZUNA ---
+const ADZUNA_ID = "45a5b9ba"; 
 const ADZUNA_KEY = "3fa642bfa053b6df8ee3e662a643b11e";
 
 app.get('/', (req, res) => {
