@@ -5,43 +5,30 @@ const app = express();
 
 app.use(cors());
 
-// --- SUAS CREDENCIAIS REAIS ADZUNA ---
-const ADZUNA_ID = "45a5b9ba"; 
-const ADZUNA_KEY = "3fa642bfa053b6df8ee3e662a643b11e";
-
-app.get('/', (req, res) => {
-    res.send('🚀 LinkBus Backend com Adzuna Online!');
-});
+const API_KEY = "7f682f8e696d4ead3ef930d4ec29878c";
 
 app.get('/api/vagas', async (req, res) => {
     const termo = req.query.keywords || "";
     
-    // API da Adzuna focada em Angola (country code: ao)
-    const url = `https://api.adzuna.com/v1/api/jobs/ao/search/1?app_id=${ADZUNA_ID}&app_key=${ADZUNA_KEY}&what=${encodeURIComponent(termo)}&results_per_page=20&content-type=application/json`;
+    // Voltamos para a Careerjet, mas com uma configuração de headers mais robusta
+    const url = `https://public.api.careerjet.net/search?affid=${API_KEY}&location=Angola&keywords=${encodeURIComponent(termo)}&pagesize=20&user_ip=1.1.1.1&user_agent=Mozilla/5.0`;
 
     try {
-        const response = await axios.get(url);
-        
-        // Mapeando os dados da Adzuna para o formato que o seu index.js já entende
-        const vagasFormatadas = response.data.results.map(v => ({
-            title: v.title.replace(/<\/?[^>]+(>|$)/g, ""), // Limpa tags HTML do título
-            company: v.company.display_name || "Empresa Confidencial",
-            locations: v.location.display_name,
-            salary: v.salary_min ? `Kz ${v.salary_min.toLocaleString()}` : "Salário a combinar",
-            description: v.description.replace(/<\/?[^>]+(>|$)/g, ""), // Limpa tags HTML
-            url: v.redirect_url,
-            date: new Date(v.created).toLocaleDateString('pt-PT')
-        }));
-
-        res.json({ jobs: vagasFormatadas });
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'application/json'
+            }
+        });
+        res.json(response.data);
     } catch (error) {
-        console.error("Erro na Adzuna:", error.message);
-        // Retorna lista vazia em caso de erro para não travar o site
+        console.error("Erro na busca:", error.message);
+        
+        // Se a Careerjet continuar a bloquear o Render, vamos usar um plano B:
+        // Buscar vagas de Angola através de um agregador aberto (se disponível) ou avisar o user
         res.json({ jobs: [] });
     }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Servidor LinkBus rodando na porta ${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log(`Servidor na porta ${PORT}`));
