@@ -10,23 +10,22 @@ app.use(cors());
 
 const API_KEY = "7f682f8e696d4ead3ef930d4ec29878c";
 
+// Substitui a tua rota atual por esta que trata melhor o IP
 app.get('/api/vagas', async (req, res) => {
     const termo = req.query.keywords || "";
-
-    // O Render precisa que a URL da API externa seja completa
-    const url = `https://public.api.careerjet.net/search?affid=${API_KEY}&location=Angola&keywords=${encodeURIComponent(termo)}&pagesize=20&user_ip=1.1.1.1&user_agent=Mozilla`;
+    // O Render por vezes mascara o IP, vamos usar um IP fixo de teste se falhar
+    const userIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '1.1.1.1';
+    
+    const url = `https://public.api.careerjet.net/search?affid=${API_KEY}&location=Angola&keywords=${encodeURIComponent(termo)}&pagesize=20&user_ip=${userIP}&user_agent=Mozilla`;
 
     try {
         const response = await axios.get(url);
         res.json(response.data);
-    }// No seu servidor.js (Backend)
-} catch (error) {
-    console.error("Erro detalhado:", error.response ? error.response.data : error.message);
-    res.status(500).json({ 
-        error: "Erro ao buscar dados", 
-        details: error.message 
-    });
-} 
+    } catch (error) {
+        // Isto vai mostrar o erro real nos LOGS do Render
+        console.error("Erro na Careerjet:", error.response ? error.response.data : error.message);
+        res.status(500).json({ error: "Erro na API externa" });
+    }
 });
 
 // CRUCIAL PARA O RENDER: O Render define a porta automaticamente na variável process.env.PORT
