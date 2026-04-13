@@ -19,10 +19,14 @@ app.get('/api/vagas', async (req, res) => {
     try {
         const response = await axios.get(url);
         res.json(response.data);
-    } catch (error) {
-        console.error("Erro na API Careerjet:", error.message);
-        res.status(500).json({ error: "Erro ao buscar dados da Careerjet" });
-    }
+    }// No seu servidor.js (Backend)
+} catch (error) {
+    console.error("Erro detalhado:", error.response ? error.response.data : error.message);
+    res.status(500).json({ 
+        error: "Erro ao buscar dados", 
+        details: error.message 
+    });
+} 
 });
 
 // CRUCIAL PARA O RENDER: O Render define a porta automaticamente na variável process.env.PORT
